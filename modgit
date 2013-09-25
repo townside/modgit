@@ -540,7 +540,7 @@ update_module()
 
     git pull --quiet origin "$BRANCH" && git submodule --quiet update --init --recursive || return 1
 
-    git diff --stat --name-only "$BRANCH" "$BRANCH"@{1} > "$module_dir/diff.modgit"
+    git diff --stat --name-only "$BRANCH" "$BRANCH"@{1} > "$module_dir/diff.modgit" 2> /dev/null
 
   fi
 
@@ -569,25 +569,23 @@ update_module()
     fi
   done
   # update update.modgit files
-  echo_b "Updating files..."
   for line in $(cat "$module_dir/update.modgit" 2>/dev/null); do
     if ! [ -z "$line" ]; then
       # copy the file 
       if [ $DRY_RUN -eq 0 ]; then
         mkdir -p $(dirname "$ROOT/$line") && cp "$line" "$ROOT/$line"
-        echo "$line"
+        echo "Updating: $line"
       fi
     fi
   done
 
-  echo_b "Deleting files..."
   # delete delete.modgit files
   for line in $(cat "$module_dir/delete.modgit" 2>/dev/null); do
     if ! [ -z "$line" ] && [ -f "$ROOT/$line" ]; then
       # delete the file 
       if [ $DRY_RUN -eq 0 ]; then
         rm "$ROOT/$line" 2>/dev/null
-        echo  "$line"
+        echo  "Deleting: $line"
       fi
     fi
   done
