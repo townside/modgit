@@ -1,8 +1,8 @@
 #!/bin/bash
 
-VERSION="1.0.1"
-GITHUB="https://github.com/jreinke/modgit"
-AUTHOR="Johann Reinke"
+VERSION="1.0.2"
+GITHUB="https://github.com/townside/modgit"
+AUTHOR="Johann Reinke + Townside"
 SCRIPT=${0##*/}
 IFS=$'\n'
 USAGE="\
@@ -282,8 +282,6 @@ move_files()
 
   cd "$source_dir" || return 1
 
-  [ $DRY_RUN -eq 1 ] && echo_b "Would deploy:" || echo_b "Deploying:"
-
   for file in $(find . -type f -not -iwholename '*.git*' | sed 's/^\.\///'); do
     # Copy file by default
     copy=1
@@ -343,12 +341,12 @@ move_files()
             src="${src//\//\\/}"
             dest="${dest//\//\\/}"
             target=$(echo $file | sed "s/$src/$dest/g")
-            deploy_file "$file" "$ROOT/$target"
+#            deploy_file "$file" "$ROOT/$target"
             echo "$target" >> "$deployed_file"
           fi
         done
       else
-        deploy_file "$file" "$ROOT/$target"
+#        deploy_file "$file" "$ROOT/$target"
         echo "$target" >> "$deployed_file"
       fi
     fi
@@ -424,7 +422,7 @@ update_module()
   sleep 1
 
   cd "$source_dir"
-
+  > "$module_dir/diff.modgit"
   local old_commit=$(git rev-parse HEAD)
 
   # If module was fetched with a specific tag
@@ -454,6 +452,9 @@ update_module()
     [ -s "$module_dir/branch.modgit" ] && BRANCH=$(cat "$module_dir/branch.modgit")
 
     git pull --quiet origin "$BRANCH" && git submodule --quiet update --init --recursive || return 1
+
+    git diff --stat --name-only "$BRANCH" "$BRANCH"@{1} > "$module_dir/diff.modgit"
+
   fi
 
   local new_commit=$(git rev-parse HEAD)
@@ -470,10 +471,44 @@ update_module()
     return 0
   fi
 
-  if delete_files "$module" &&
-    move_files "$module";
+
+  > "$module_dir/update.modgit"
+  > "$module_dir/delete.modgit"
+  for line in $(cat "$module_dir/diff.modgit" 2>/dev/null); do
+    if ! [ -z "$line" ] && [ -f "$line" ]; then
+      echo "$line" >> "$module_dir/update.modgit"
+    elif ! [ -z "$line" ]; then
+      echo "$line" >> "$module_dir/delete.modgit" 
+    fi
+  done
+  # update update.modgit files
+  echo_b "Updating files..."
+  for line in $(cat "$module_dir/update.modgit" 2>/dev/null); do
+    if ! [ -z "$line" ]; then
+      # copy the file 
+      if [ $DRY_RUN -eq 0 ]; then
+        mkdir -p $(dirname "$ROOT/$line") && cp "$line" "$ROOT/$line"
+        echo "$line"
+      fi
+    fi
+  done
+
+  echo_b "Deleting files..."
+  # delete delete.modgit files
+  for line in $(cat "$module_dir/delete.modgit" 2>/dev/null); do
+    if ! [ -z "$line" ] && [ -f "$ROOT/$line" ]; then
+      # delete the file 
+      if [ $DRY_RUN -eq 0 ]; then
+        rm "$ROOT/$line" 2>/dev/null
+        echo  "$line"
+      fi
+    fi
+  done
+  
+  # update the deployed.modgit file
+  if move_files "$module";
   then
-    return 0
+  	return 0
   else
     return 1
   fi
