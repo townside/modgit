@@ -1,23 +1,23 @@
 # Deploy multiple Git repositories in an unique folder
 
-`modgit` is a shell script for deploying multiple Git repositories in root folder of any project, which is not possible with default `git submodule` command. A common use case would be the easy installation of Magento modules that need to be deployed in root folder.
+`modgit` is a shell script for deploying multiple Git repositories in root folder of any project, which is not possible with default `git submodule` command. A common use case would be the easy installation of Magento modules that need to be deployed in root folder. This has been updated so that is only updates and deletes the relevant files instead of removing all files and then adding them back in afterwards. 
 
 ## Installation
 
 ### curl installation
 
-    $ curl https://raw.github.com/jreinke/modgit/master/modgit > modgit
+    $ curl https://raw.github.com/townside/modgit/master/modgit > modgit
     $ chmod +x modgit
     $ sudo mv modgit /usr/local/bin
 
 ### wget installation
 
-    $ wget -O modgit https://raw.github.com/jreinke/modgit/master/modgit
+    $ wget -O modgit https://raw.github.com/townside/modgit/master/modgit
     $ chmod +x modgit
     $ sudo mv modgit /usr/local/bin
 
 ### Manual download
-* Download shell script [here](https://raw.github.com/jreinke/modgit/master/modgit)
+* Download shell script [here](https://raw.github.com/townside/modgit/master/modgit)
 * Copy modgit file to `/usr/local/bin` (or any folder in your $PATH)
 * Run `chmod +x modgit`
 
